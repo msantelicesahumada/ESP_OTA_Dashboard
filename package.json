@@ -1,0 +1,26 @@
+{
+  "name": "esp_ota_dashboard",
+  "version": "1.0.0",
+  "description": "an efficient and user friendly OTA server equipped with a powerful WEB UI, designed to effortlessly manage both your ESP8266 and ESP32 Firmware and Status. This OTA solution simplifies the process of updating and monitoring your ESP devices.",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "express-ws": "^5.0.2",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "multer": "^1.4.5-lts.1",
+    "path": "^0.12.7",
+    "ws": "^8.13.0"
+  }
+}

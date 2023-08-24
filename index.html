@@ -46,6 +46,9 @@
          .action-button.show-all-btn {
          background-color: var(--secondary-color);
          }
+         .action-button.flash-all-btn {
+         background-color: #553fd2;
+         }
          .action-button:hover {
          background-color: #d32f2f;
          }
@@ -54,6 +57,9 @@
          }
          .action-button.show-all-btn:hover {
          background-color: #45a049;
+         }
+         .action-button.flash-all-btn:hover {
+         background-color: #4634af;
          }
          .container {
          display: flex;
@@ -412,6 +418,7 @@
       <!-- Action buttons for non-smartphone view -->
       <div class="action-buttons">
          <label class="action-button flush-btn" onclick="promptPasswordAndFlushAll()">Flush All Devices</label>
+         <label class="action-button flash-all-btn" onclick="promptPasswordAndFlashAll()">Flash All Devices</label>
          <label class="action-button show-all-btn" onclick="toggleRegisteredDevices()">Show All Devices</label>
          <label class="action-button logout-btn" onclick="logout()">Logout</label>
       </div>
@@ -592,6 +599,56 @@
                         .catch(error => console.error('Error uploading firmware:', error));
                 }
                 
+         function flashAllDevices() {
+            // Gets the firmware File
+            const fileInput = document.getElementById('firmware');
+            const selectedFile = fileInput.files[0];
+            if (!selectedFile) {
+               alert('Please select a firmware file.');
+               return;
+            }
+         
+            const formData = new FormData();
+            formData.append('firmwareFile', selectedFile);
+            
+            // Iteration on the devices for the update
+            fetch('/getDevices')
+            .then(response => response.json())
+            .then(data => {
+                  data.forEach(device => {
+                     const selectedESP = device;
+                     fetch('/upload?hostName=' + encodeURIComponent(selectedESP), {
+                        method: 'POST',
+                        body: formData
+                     })
+                     .then(response => {
+                     if (response.ok) {
+                        // Start the OTA update after a brief delay (e.g., 2 seconds)
+                        setTimeout(() => {
+                        fetch('/flash-firmware?hostName=' + encodeURIComponent(selectedESP))
+                           .then(response => {
+                              if (response.ok) {
+                                 // Optionally, you can display another success message here
+                              } else {
+                                 // Optionally, display an error message here
+                              }
+                           })
+                           .catch(error => console.error('Error initiating firmware flashing:', error));
+                        
+                        // Hide the notification after the OTA update is initiated
+                        //notification.style.display = 'none';
+                        }, 2000); // Adjust the delay as per your requirement
+                     } else {
+                        // Display an error message
+                        /* const notification = document.getElementById('notification');
+                        notification.innerHTML = 'Firmware upload failed.';
+                        notification.style.backgroundColor = 'red';
+                        notification.style.display = 'block'; */
+                     }
+                     }).catch(error => console.error('Error uploading firmware:', error));});
+                  }).catch(error => console.error('Error fetching devices:', error));
+         }
+
                 // Function to fetch online status and firmware version for all registered devices
                 function fetchDeviceStatus() {
                     fetch('/getOnlineStatus')
@@ -771,6 +828,35 @@
                       if (response.ok) {
                          // Password is correct, proceed with flushing all devices
                          flushAllDevices();
+                      } else {
+                         // Password is incorrect, show an error message
+                         alert('Incorrect password. Flushing all devices canceled.');
+                      }
+                   })
+                   .catch(error => console.error('Error authenticating password:', error));
+                }
+
+                // Function to prompt password and flush all devices
+                function promptPasswordAndFlashAll() {
+                   const password = prompt('Enter password:'); // Prompt the user for password
+                
+                   if (password === null || password === '') {
+                      // User canceled or entered an empty password
+                      return;
+                   }
+                
+                   // Send the password to the Node.js server for authentication
+                   fetch('/authenticate', {
+                      method: 'POST',
+                      headers: {
+                         'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ password: password })
+                   })
+                   .then(response => {
+                      if (response.ok) {
+                         // Password is correct, proceed with flushing all devices
+                         flashAllDevices();
                       } else {
                          // Password is incorrect, show an error message
                          alert('Incorrect password. Flushing all devices canceled.');
